@@ -29,7 +29,7 @@ def mock_nodes():
 
 @pytest.fixture
 def model_analyzer(mock_nodes):
-    return ModelAnalyzer(mock_nodes)
+    return ModelAnalyzer(mock_nodes, source_data={})  # Empty source_data
 
 def test_get_materialized_model_lineage(model_analyzer):
     materialized_lineage = model_analyzer.get_materialized_model_lineage()

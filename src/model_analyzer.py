@@ -2,11 +2,14 @@ from typing import Dict, List
 from src.column_lineage import ColumnLineageTracer
 
 class ModelAnalyzer:
-    def __init__(self, nodes: Dict):
+    def __init__(self, nodes: Dict, source_data: Dict = None):
         self.nodes = nodes
-        self.lineage_tracer = ColumnLineageTracer(nodes)
-        self.materialized_models = set(node_name for node_name, node in nodes.items() 
-                                       if node.get('resource_type') == 'model' and node.get('config', {}).get('materialized') == 'table')
+        self.source_data = source_data if source_data else {}
+        self.lineage_tracer = ColumnLineageTracer(nodes, self.source_data)
+        self.materialized_models = set(
+            node_name for node_name, node in nodes.items()
+            if node.get('resource_type') == 'model' and node.get('config', {}).get('materialized') == 'table'
+        )
 
     def get_materialized_model_lineage(self) -> Dict[str, Dict]:
         """
