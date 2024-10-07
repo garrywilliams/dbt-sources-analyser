@@ -10,7 +10,7 @@ def nodes():
     return manifest['nodes']
 
 def test_column_lineage_integration(nodes):
-    tracer = ColumnLineageTracer(nodes, source_data={})  # Pass an empty dict for source_data    
+    tracer = ColumnLineageTracer(nodes, source_data={}, manifest={})  # Pass an empty dict for source_data    
     lineage = tracer.get_base_level_lineage('model.marts.dim_customers')
     expected = {
         'customer_id': {('source.raw.customers', 'id')},

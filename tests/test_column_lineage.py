@@ -24,7 +24,7 @@ def sample_nodes():
 
 @pytest.fixture
 def tracer(sample_nodes):
-    return ColumnLineageTracer(sample_nodes, source_data={})  # Pass an empty dict for source_data
+    return ColumnLineageTracer(sample_nodes, source_data={}, manifest={})  # Pass an empty dict for source_data
 
 def test_trace_column_lineage(tracer):
     lineage = tracer.trace_column_lineage('model.mart.dim_users', 'user_id')

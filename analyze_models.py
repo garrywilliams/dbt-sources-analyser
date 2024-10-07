@@ -34,7 +34,7 @@ def main():
 
     # Initialize ModelAnalyzer with manifest nodes and source data
     nodes = manifest_data.get("nodes", {})  # Assuming manifest has 'nodes'
-    model_analyzer = ModelAnalyzer(nodes, source_data)
+    model_analyzer = ModelAnalyzer(nodes, source_data, manifest_data)
 
     # Analyze the report model's lineage
     report_model_name = args.report_model

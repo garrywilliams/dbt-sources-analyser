@@ -2,7 +2,6 @@ from typing import List, Dict
 from collections import defaultdict
 import sqlglot
 from sqlglot import exp
-from sqlglot.dialects import Redshift
 
 class SqlParser:
     @staticmethod

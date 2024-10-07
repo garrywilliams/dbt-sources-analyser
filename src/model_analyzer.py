@@ -2,10 +2,10 @@ from typing import Dict, List
 from src.column_lineage import ColumnLineageTracer
 
 class ModelAnalyzer:
-    def __init__(self, nodes: Dict, source_data: Dict = None):
+    def __init__(self, nodes: Dict, source_data: Dict = None, manifest: Dict = None):
         self.nodes = nodes
         self.source_data = source_data if source_data else {}
-        self.lineage_tracer = ColumnLineageTracer(nodes, self.source_data)
+        self.lineage_tracer = ColumnLineageTracer(nodes, self.source_data, manifest)
         self.materialized_models = set(
             node_name for node_name, node in nodes.items()
             if node.get('resource_type') == 'model' and node.get('config', {}).get('materialized') == 'table'
