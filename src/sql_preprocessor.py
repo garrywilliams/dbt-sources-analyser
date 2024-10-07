@@ -1,5 +1,15 @@
-# sql_preprocessor.py
-from jinja2 import Environment
+from jinja2 import Environment, nodes
+from jinja2.ext import Extension
+
+# Custom Jinja2 Extension to ignore specific blocks
+class IgnoreConfigExtension(Extension):
+    # A list of block names we want to ignore
+    tags = {'config'}
+
+    def parse(self, parser):
+        lineno = next(parser.stream).lineno
+        # Parse the block and return an empty node (effectively removing it)
+        return nodes.Output([nodes.Const('')]).set_lineno(lineno)
 
 def resolve_references(sql: str, manifest: dict):
     def ref(model_name):
@@ -19,5 +29,6 @@ def resolve_references(sql: str, manifest: dict):
     return env.from_string(sql).render()
 
 def preprocess_sql(raw_sql: str, manifest: dict) -> str:
-    # Resolve ref and source references in SQL using the manifest
+    # Resolve references and remove config blocks
     return resolve_references(raw_sql, manifest)
+
