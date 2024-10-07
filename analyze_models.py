@@ -1,57 +1,62 @@
 import argparse
-import json
 from src.model_analyzer import ModelAnalyzer
-from src.yml_processor import process_yaml_files, merge_yaml_with_manifest
+from src.yml_processor import process_yaml_sources
+from src.manifest_loader import load_manifest
 
 
-def load_manifest(path: str) -> dict:
-    with open(path, 'r') as f:
-        return json.load(f)
+def main():
+    # Set up argument parser
+    parser = argparse.ArgumentParser(
+        description="Analyze DBT models and report column lineage."
+    )
+    parser.add_argument(
+        "--manifest", required=True, help="Path to the DBT manifest.json file."
+    )
+    parser.add_argument(
+        "--report_model", required=True, help="Report model to analyze."
+    )
+    parser.add_argument(
+        "--yaml",
+        required=True,
+        help="Path to the directory containing YAML source files.",
+    )
 
+    # Parse command-line arguments
+    args = parser.parse_args()
 
-def main(manifest_path: str, report_model: str, yaml_path: str = None):
-    # Load manifest.json file
+    # Load the manifest.json file
+    manifest_path = args.manifest
     manifest_data = load_manifest(manifest_path)
 
-    # Process optional YAML files if provided
-    if yaml_path:
-        yaml_data = process_yaml_files(yaml_path)
-        manifest_data = merge_yaml_with_manifest(yaml_data, manifest_data)
+    # Process the YAML source files to extract sources
+    yaml_path = args.yaml
+    source_data = process_yaml_sources(yaml_path)
 
-    # Initialize ModelAnalyzer
-    analyzer = ModelAnalyzer(manifest_data['nodes'])
+    # Initialize ModelAnalyzer with manifest nodes and source data
+    nodes = manifest_data.get("nodes", {})  # Assuming manifest has 'nodes'
+    model_analyzer = ModelAnalyzer(nodes, source_data)
 
-    # Get the source table and columns for the report model
-    source_columns = analyzer.lineage_tracer.get_base_level_lineage(report_model)
+    # Analyze the report model's lineage
+    report_model_name = args.report_model
+    print(f"Source columns for report model '{report_model_name}':")
+    report_source_columns = model_analyzer.lineage_tracer.get_base_level_lineage(
+        report_model_name
+    )
+    print(report_source_columns)
 
-    print(f"Source columns for report model '{report_model}':")
-    for column, sources in source_columns.items():
-        print(f"  Column: {column}, Sources: {sources}")
-
-    # Dump all materialized models and their source columns
-    materialized_model_lineage = analyzer.get_materialized_model_lineage()
-
+    # Analyze and display materialized models
     print("\nMaterialized models and their source columns:")
-    for model_name, lineage in materialized_model_lineage.items():
+    materialized_lineage = model_analyzer.get_materialized_model_lineage()
+    for model_name, lineage in materialized_lineage.items():
         print(f"Materialized Model: {model_name}")
-        for column, sources in lineage.items():
-            print(f"  Column: {column}, Sources: {sources}")
+        print(lineage)
 
-    # Perform the analysis for matching materialized models
-    matches = analyzer.analyze_model_matches(report_model)
-
-    print(f"\nMaterialized models matching '{report_model}':")
+    # Compare report model with materialized models
+    print("\nModel comparison results:")
+    matches = model_analyzer.analyze_model_matches(report_model_name)
     for match in matches:
-        print(f"  Materialized Model: {match['materialized_model']}, "
-              f"Match Score: {match['match_score']}")
-        print(f"  Matching Columns: {match['matching_columns']}")
+        print(match)
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Analyze report model lineage and match with materialized models.")
-    parser.add_argument("--manifest", required=True, help="Path to the manifest.json file")
-    parser.add_argument("--report_model", required=True, help="The report model name to analyze")
-    parser.add_argument("--yaml_path", help="Optional: Path to the folder containing YAML model definitions", default=None)
-
-    args = parser.parse_args()
-    main(args.manifest, args.report_model, args.yaml_path)
+    main()

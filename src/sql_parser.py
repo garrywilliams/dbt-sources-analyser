@@ -94,9 +94,14 @@ class SqlParser:
                 'arguments': column,
                 'alias': alias or column  # Use alias if present, else column name
             })
+        elif isinstance(arg, exp.Func):
+            # If the argument itself is a function, recursively process the function
+            SqlParser._process_function(arg, transformations)
         else:
             # Process non-column arguments (e.g., constants or literals)
             print(f"Found non-column argument: {arg}")  # Diagnostic for non-column arguments
+
+
 
     @staticmethod
     def _process_operation(op, transformations):

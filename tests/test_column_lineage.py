@@ -12,13 +12,13 @@ def sample_nodes():
             'resource_type': 'model',
             'columns': {'user_id': {}, 'full_name': {}, 'email_address': {}},
             'depends_on': {'nodes': ['source.raw.users']},
-            'raw_sql': "SELECT id as user_id, name as full_name, email as email_address FROM source.raw.users"
+            'raw_code': "SELECT id as user_id, name as full_name, email as email_address FROM source.raw.users"
         },
         'model.mart.dim_users': {
             'resource_type': 'model',
             'columns': {'user_id': {}, 'full_name': {}, 'email': {}},
             'depends_on': {'nodes': ['model.staging.stg_users']},
-            'raw_sql': "SELECT user_id, full_name, email_address as email FROM model.staging.stg_users"
+            'raw_code': "SELECT user_id, full_name, email_address as email FROM model.staging.stg_users"
         }
     }
 

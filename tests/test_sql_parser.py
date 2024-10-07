@@ -47,3 +47,16 @@ def test_arithmetic_operations(parser):
     assert transformations['price'][0]['type'] == 'operation'
     assert transformations['price'][0]['operator'] == 'MUL'
     assert transformations['price'][0]['right_operand'] == 'quantity'
+
+def test_nested_functions(parser):
+    sql = "SELECT CONCAT(UPPER(first_name), ' ', LOWER(last_name)) AS full_name, DATEDIFF(YEAR, birth_date, GETDATE()) AS age FROM users"
+    transformations = parser.extract_transformations(sql)
+    
+    assert 'first_name' in transformations
+    assert 'last_name' in transformations
+    assert 'birth_date' in transformations
+    
+    # Check that functions are correctly identified
+    assert any('UPPER' in t.get('function', '') for t in transformations['first_name'])
+    assert any('LOWER' in t.get('function', '') for t in transformations['last_name'])
+    assert any('DATEDIFF' in t.get('function', '') for t in transformations['birth_date'])

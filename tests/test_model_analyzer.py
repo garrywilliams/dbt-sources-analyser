@@ -7,14 +7,14 @@ def mock_nodes():
         "model.report_model_1": {
             "resource_type": "model",
             "columns": {"a": {}, "b": {}, "c": {}},
-            "raw_sql": "SELECT a, b, c FROM source_model_1",
+            "raw_code": "SELECT a, b, c FROM source_model_1",
             "depends_on": {"nodes": ["source_model_1", "source_model_2"]}
         },
         "model.materialized_model_1": {
             "resource_type": "model",
             "config": {"materialized": "table"},
             "columns": {"a": {}, "b": {}, "d": {}},
-            "raw_sql": "SELECT a, b, d FROM source_model_1",
+            "raw_code": "SELECT a, b, d FROM source_model_1",
             "depends_on": {"nodes": ["source_model_1"]}
         },
         "source_model_1": {

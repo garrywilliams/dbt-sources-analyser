@@ -1,12 +1,13 @@
 from typing import Dict, Set, Tuple
 from src.sql_parser import SqlParser
+import re
+
 
 class ColumnLineageTracer:
     def __init__(self, nodes: Dict, source_data: Dict):
         self.nodes = nodes
         self.source_data = source_data
         self.sql_parser = SqlParser()  # Ensure SqlParser is initialized
-
 
     def trace_column_lineage(
         self, node_name: str, column_name: str, visited: Set[str] = None
@@ -33,8 +34,11 @@ class ColumnLineageTracer:
 
         lineage = set()
         if node:
-            raw_sql = node.get("raw_sql")
+            raw_sql = node.get("raw_code")
             if raw_sql:
+
+                raw_sql = self.preprocess_sql(raw_sql)
+
                 sql_lineage = self.sql_parser.analyze_column_lineage(raw_sql)
                 transformations = self.sql_parser.extract_transformations(raw_sql)
 
@@ -81,7 +85,6 @@ class ColumnLineageTracer:
             part in col1_parts for part in col2_parts
         )
 
-
     def get_base_level_lineage(self, node_name: str) -> Dict[str, Set[Tuple[str, str]]]:
         """
         Returns the base lineage for a given node. If the node is a source table from YAML,
@@ -104,3 +107,13 @@ class ColumnLineageTracer:
                 base_lineage[column] = lineage
 
         return base_lineage
+
+    def preprocess_sql(self, sql: str) -> str:
+        """
+        Preprocess DBT SQL to remove or replace Jinja expressions like {{ ... }}.
+        Handles multiline and nested expressions.
+        """
+        # Regex to capture {{ ... }} patterns, including multiline and nested structures
+        preprocessed_sql = re.sub(r"\{\{[\s\S]*?\}\}", "", sql)
+
+        return preprocessed_sql.strip()
