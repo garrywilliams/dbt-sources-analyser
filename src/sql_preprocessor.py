@@ -1,27 +1,32 @@
 from jinja2 import Environment, Undefined, nodes
 from jinja2.visitor import NodeTransformer
+import re
 
 class IgnoreUndefined(Undefined):
     def __str__(self):
-        return ""
+        return f'"PLACEHOLDER_{self._undefined_name}"'
 
     def __call__(self, *args, **kwargs):
-        return ""
+        return f'"PLACEHOLDER_{self._undefined_name}"'
 
-class ConfigAndMacroRemover(NodeTransformer):
+class ConfigMacroAndSetRemover(NodeTransformer):
     def visit_Call(self, node):
         if isinstance(node.node, nodes.Name) and node.node.name == 'config':
             return nodes.Const('')
         return node
 
     def visit_Macro(self, node):
-        # Remove macro definitions
         return None
+
+    def visit_Assign(self, node):
+        if isinstance(node.target, nodes.Name):
+            return None
+        return node
 
 class CustomEnvironment(Environment):
     def _parse(self, source, name, filename):
         parsed = super()._parse(source, name, filename)
-        transformer = ConfigAndMacroRemover()
+        transformer = ConfigMacroAndSetRemover()
         return transformer.visit(parsed)
 
 def resolve_references(sql: str, manifest: dict):
@@ -35,11 +40,12 @@ def resolve_references(sql: str, manifest: dict):
     env.globals['ref'] = ref
     env.globals['source'] = source
     env.globals['config'] = lambda *args, **kwargs: ''
-    env.globals['var'] = lambda *args, **kwargs: ''
+    env.globals['var'] = lambda *args, **kwargs: '"PLACEHOLDER_var"'
     env.globals['macro'] = lambda *args, **kwargs: ''
 
     try:
-        return env.from_string(sql).render()
+        rendered_sql = env.from_string(sql).render()
+        return rendered_sql
     except Exception as e:
         print(f"Error processing SQL: {e}")
         return sql
